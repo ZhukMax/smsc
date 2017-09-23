@@ -1,0 +1,6 @@
+/.idea
+/.idea_modules
+/composer.phar
+/vendor
+*.lnk
+*.ini
