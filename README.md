@@ -165,9 +165,9 @@ curl или fsockopen (только http) или включена опция all
 
 The Apache License Version 2.0. Текст лицензии находится в файле [License File](license.md).
 
-[ico-version]: https://img.shields.io/packagist/v/zhukmax/smsc.svg?style=flat-square
-[ico-license]: https://img.shields.io/badge/license-Apache%202-brightgreen.svg?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/zhukmax/smsc.svg?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/zhukmax/smsc.svg
+[ico-license]: https://img.shields.io/badge/license-Apache%202-brightgreen.svg
+[ico-downloads]: https://img.shields.io/packagist/dt/zhukmax/smsc.svg
 
 [link-packagist]: https://packagist.org/packages/zhukmax/smsc
 [link-downloads]: https://packagist.org/packages/zhukmax/smsc
