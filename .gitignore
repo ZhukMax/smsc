@@ -4,3 +4,4 @@
 /vendor
 *.lnk
 *.ini
+/*.php
