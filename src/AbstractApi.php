@@ -10,19 +10,19 @@ abstract class AbstractApi
     /**
      * @var string
      */
-    protected $protocol;
-    /**
-     * @var string
-     */
-    protected $charset;
-    /**
-     * @var string
-     */
     protected $login;
     /**
      * @var string
      */
     protected $password;
+    /**
+     * @var string
+     */
+    protected $protocol;
+    /**
+     * @var string
+     */
+    protected $charset;
     /**
      * @var string
      */
@@ -35,21 +35,89 @@ abstract class AbstractApi
      * @var bool
      */
     protected $debug;
+    /**
+     * @var string
+     */
+    private $url;
+    /**
+     * @var
+     */
+    private $curl;
 
     /**
      * AbstractApi constructor.
+     * @param string $login
+     * @param string $password
      * @param array $options
+     * @throws \Exception
      */
-    public function __construct($options)
+    public function __construct($login, $password, $options = [])
     {
-        $this->protocol = $options['protocol'] ?: 'http';
+        $this->login = $login ?: null;
+        $this->password = $password ?: null;
+        if (!$this->login || !$this->password) {
+            throw new \Exception("Логин и пароль обязательные поля!");
+        }
+
+        $this->protocol = $options['protocol'] === 'https' ? 'https': 'http';
         $this->charset = $options['charset'] ?: 'utf-8';
-        $this->login = $options['login'] ?: '';
-        $this->password = $options['password'] ?: '';
         $this->from = $options['from'] ?: 'api@smsc.ru';
         $this->httpPost = $options['post'] ?: false;
         $this->debug = $options['debug'] ?: false;
+
+        $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
+            urlencode($this->login) . "&psw=" . urlencode($this->password) .
+            "&fmt=1&charset=" . $this->charset;
     }
+
+    /**
+     * @param string $property
+     * @return mixed
+     */
+    abstract public function getProperty($property);
+
+    /**
+     * Функция отправки SMS.
+     *
+     * @param $phones
+     * @param $message
+     * @param int $translit
+     * @param int $time
+     * @param int $id
+     * @param int $format
+     * @param bool $sender
+     * @param string $query
+     * @param array $files
+     * @return mixed
+     */
+    abstract public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = false, $query = "", $files = array());
+
+    /**
+     * SMTP версия функции отправки SMS.
+     *
+     * @param $phones
+     * @param $message
+     * @param int $translit
+     * @param int $time
+     * @param int $id
+     * @param int $format
+     * @param string $sender
+     * @return mixed
+     */
+    abstract public function sendSmsMail($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "");
+
+    /**
+     * Функция получения стоимости SMS.
+     *
+     * @param $phones
+     * @param $message
+     * @param int $translit
+     * @param int $format
+     * @param bool $sender
+     * @param string $query
+     * @return mixed
+     */
+    abstract public function getSmsCost($phones, $message, $translit = 0, $format = 0, $sender = false, $query = "");
 
     /**
      * Функция проверки статуса отправленного SMS или HLR-запроса.
@@ -79,35 +147,36 @@ abstract class AbstractApi
      */
     protected function sendCmd($cmd, $arg = "", $files = array())
     {
-        $url = $this->protocol . "://smsc.ru/sys/$cmd.php?login=".urlencode($this->login)."&psw=".urlencode($this->password)."&fmt=1&charset=".$this->charset."&".$arg;
-
+        $url = $_url = str_replace("%s", $cmd, $this->url) . "&" . $arg;
         $i = 0;
+
         do {
-            if ($i++)
-                $url = str_replace('://smsc.ru/', '://www'.$i.'.smsc.ru/', $url);
+            if ($i++) {
+                $url = str_replace('://', '://www' . $i, $_url);
+            }
 
-            $ret = $this->readUrl($url, $files, 3 + $i);
-        }
-        while ($ret == "" && $i < 5);
+            $result = $this->readUrl($url, $files, 3 + $i);
+        } while ($result == "" && $i < 5);
 
-        if ($ret == "") {
+        if ($result == "") {
             if ($this->debug) {
                 echo "Ошибка чтения адреса: $url\n";
             }
 
-            $ret = ",";
+            $result = ",";
         }
 
-        $delim = ",";
+        $delimiter = ",";
 
         if ($cmd == "status") {
             parse_str($arg, $m);
 
-            if (strpos($m["id"], ","))
-                $delim = "\n";
+            if (strpos($m["id"], ",")) {
+                $delimiter = "\n";
+            }
         }
 
-        return explode($delim, $ret);
+        return explode($delimiter, $result);
     }
 
     /**
@@ -117,27 +186,16 @@ abstract class AbstractApi
      * @param $files
      * @param int $tm
      * @return bool|mixed|string
+     * @throws \Exception
      */
     protected function readUrl($url, $files, $tm = 5)
     {
-        $ret = "";
         $post = $this->httpPost || strlen($url) > 2000 || $files;
+        $result = "";
 
         if (function_exists("curl_init")) {
-            static $c = 0; // keepalive
-
-            if (!$c) {
-                $c = curl_init();
-                curl_setopt_array($c, [
-                    CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_CONNECTTIMEOUT => $tm,
-                    CURLOPT_TIMEOUT => 60,
-                    CURLOPT_SSL_VERIFYPEER => 0,
-                    CURLOPT_HTTPHEADER => ['Expect:']
-                ]);
-            }
-
-            curl_setopt($c, CURLOPT_POST, $post);
+            $this->initCurl($tm);
+            curl_setopt($this->curl, CURLOPT_POST, $post);
 
             if ($post) {
                 list($url, $post) = explode("?", $url, 2);
@@ -145,46 +203,68 @@ abstract class AbstractApi
                 if ($files) {
                     parse_str($post, $m);
 
-                    foreach ($m as $k => $v)
+                    foreach ($m as $k => $v) {
                         $m[$k] = isset($v[0]) && $v[0] == "@" ? sprintf("\0%s", $v) : $v;
+                    }
 
                     $post = $m;
-                    foreach ($files as $i => $path)
-                        if (file_exists($path))
-                            $post["file".$i] = function_exists("curl_file_create") ? curl_file_create($path) : "@".$path;
+                    foreach ($files as $i => $path) {
+                        if (file_exists($path)) {
+                            $post["file" . $i] = function_exists("curl_file_create") ? curl_file_create($path) : "@" . $path;
+                        }
+                    }
                 }
 
-                curl_setopt($c, CURLOPT_POSTFIELDS, $post);
+                curl_setopt($this->curl, CURLOPT_POSTFIELDS, $post);
             }
 
-            curl_setopt($c, CURLOPT_URL, $url);
+            curl_setopt($this->curl, CURLOPT_URL, $url);
 
-            $ret = curl_exec($c);
+            $result = curl_exec($this->curl);
         } else if ($files) {
             if ($this->debug){
-                echo "Не установлен модуль curl для передачи файлов\n";
+                throw new \Exception("Не установлен модуль curl для передачи файлов!");
             }
         } else if ($this->protocol === 'https' && function_exists("fsockopen")) {
             $m = parse_url($url);
 
-            if (!$fp = fsockopen($m["host"], 80, $errno, $errstr, $tm))
+            if (!$fp = fsockopen($m["host"], 80, $errno, $errstr, $tm)) {
                 $fp = fsockopen("212.24.33.196", 80, $errno, $errstr, $tm);
+            }
 
             if ($fp) {
                 stream_set_timeout($fp, 60);
 
                 fwrite($fp, ($post ? "POST $m[path]" : "GET $m[path]?$m[query]")." HTTP/1.1\r\nHost: smsc.ru\r\nUser-Agent: PHP".($post ? "\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: ".strlen($m['query']) : "")."\r\nConnection: Close\r\n\r\n".($post ? $m['query'] : ""));
 
-                while (!feof($fp))
-                    $ret .= fgets($fp, 1024);
-                list(, $ret) = explode("\r\n\r\n", $ret, 2);
+                while (!feof($fp)) {
+                    $result .= fgets($fp, 1024);
+                }
+                list(, $result) = explode("\r\n\r\n", $result, 2);
 
                 fclose($fp);
             }
         } else {
-            $ret = file_get_contents($url);
+            $result = file_get_contents($url);
         }
 
-        return $ret;
+        return $result;
+    }
+
+    /**
+     * @param int $timeout
+     */
+    private function initCurl($timeout)
+    {
+        if (function_exists("curl_init") && !$this->curl) {
+            $this->curl = curl_init();
+            curl_setopt_array($this->curl, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_CONNECTTIMEOUT => $timeout,
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTPHEADER => ['Expect:']
+            ]);
+        }
     }
 }
