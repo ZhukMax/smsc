@@ -20,7 +20,7 @@ try {
         'test',
         '123',
         [
-            'protocol' => 'https',
+            'https' => true,
             'charset' => 'windows-1251',
             'from' => 'api@smsc.ru',
             'post' => true,

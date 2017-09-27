@@ -25,7 +25,7 @@ class Api extends AbstractApi
      * @param int $time
      * @param int $id
      * @param int $format
-     * @param bool $sender
+     * @param string|bool $sender
      * @param string $query
      * @param array $files
      * @return mixed

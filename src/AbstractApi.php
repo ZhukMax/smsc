@@ -59,10 +59,10 @@ abstract class AbstractApi
             throw new \Exception("Логин и пароль обязательные поля!");
         }
 
-        $this->protocol = $options['protocol'] === 'https' ? 'https': 'http';
-        $this->charset = $options['charset'] ?: 'utf-8';
-        $this->from = $options['from'] ?: 'api@smsc.ru';
-        $this->httpPost = $options['post'] ?: false;
+        $this->protocol = isset($options['https']) ? 'https': 'http';
+        $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
+        $this->from = isset($options['from']) ? $options['from'] : 'api@smsc.ru';
+        $this->httpPost = isset($options['post']) ?: false;
         $this->debug = $options['debug'] ?: false;
 
         $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
