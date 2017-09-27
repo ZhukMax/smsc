@@ -25,18 +25,19 @@ class Api extends AbstractApi
      * @param int $time
      * @param int $id
      * @param int $format
-     * @param string|bool $sender
+     * @param string $sender
      * @param string $query
      * @param array $files
      * @return mixed
      */
-    public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = false, $query = "", $files = array())
+    public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender, $query = "", $files = array())
     {
         static $formats = array(1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1");
+        $sender = isset($sender) ? $sender : $this->sender;
 
         $result = $this->sendCmd("send", "cost=3&phones=".urlencode($phones)."&mes=".urlencode($message).
             "&translit=$translit&id=$id".($format > 0 ? "&".$formats[$format] : "").
-            ($sender === false ? "" : "&sender=".urlencode($sender)).
+            (!isset($sender) ? "" : "&sender=".urlencode($sender)).
             ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : ""), $files);
 
         if ($this->debug) {

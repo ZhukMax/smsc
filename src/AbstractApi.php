@@ -38,6 +38,10 @@ abstract class AbstractApi
     /**
      * @var string
      */
+    protected $sender;
+    /**
+     * @var string
+     */
     private $url;
     /**
      * @var
@@ -63,7 +67,8 @@ abstract class AbstractApi
         $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
         $this->from = isset($options['from']) ? $options['from'] : 'api@smsc.ru';
         $this->httpPost = isset($options['post']) ?: false;
-        $this->debug = $options['debug'] ?: false;
+        $this->debug = isset($options['debug']) ?: false;
+        $this->sender = isset($options['sender']) ?: null;
 
         $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
             urlencode($this->login) . "&psw=" . urlencode($this->password) .
@@ -85,12 +90,12 @@ abstract class AbstractApi
      * @param int $time
      * @param int $id
      * @param int $format
-     * @param bool $sender
+     * @param string $sender
      * @param string $query
      * @param array $files
      * @return mixed
      */
-    abstract public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = false, $query = "", $files = array());
+    abstract public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender, $query = "", $files = array());
 
     /**
      * SMTP версия функции отправки SMS.
