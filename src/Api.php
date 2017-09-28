@@ -30,7 +30,7 @@ class Api extends AbstractApi
      * @param array $files
      * @return mixed
      */
-    public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender, $query = "", $files = array())
+    public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = null, $query = "", $files = array())
     {
         static $formats = array(1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1");
         $sender = isset($sender) ? $sender : $this->sender;
@@ -40,13 +40,12 @@ class Api extends AbstractApi
             (!isset($sender) ? "" : "&sender=".urlencode($sender)).
             ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : ""), $files);
 
-        if ($this->debug) {
-            if ($result[1] > 0) {
-                echo "Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3].\n";
-            } else {
-                echo "Ошибка №", -$result[1], $result[0] ? ", ID: ".$result[0] : "", "\n";
-            }
+        if ($result[1] > 0) {
+            $debugText = "Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3].\n";
+        } else {
+            $debugText = "Ошибка №". -$result[1]. $result[0] ? ", ID: ".$result[0] : "". "\n";
         }
+        $this->log($debugText);
 
         return $result;
     }

@@ -32,7 +32,7 @@ abstract class AbstractApi
      */
     protected $httpPost;
     /**
-     * @var bool
+     * @var string
      */
     protected $debug;
     /**
@@ -67,8 +67,9 @@ abstract class AbstractApi
         $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
         $this->from = isset($options['from']) ? $options['from'] : 'api@smsc.ru';
         $this->httpPost = isset($options['post']) ?: false;
-        $this->debug = isset($options['debug']) ?: false;
         $this->sender = isset($options['sender']) ?: null;
+
+        $this->setDebug($options);
 
         $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
             urlencode($this->login) . "&psw=" . urlencode($this->password) .
@@ -257,6 +258,17 @@ abstract class AbstractApi
     }
 
     /**
+     * @param string $message
+     */
+    protected function log($message = '')
+    {
+        if ($this->debug) {
+            $data = date("Y-m-d H:i:s") . " | " . $message . "\n";
+            file_put_contents($this->debug, $data, FILE_APPEND);
+        }
+    }
+
+    /**
      * @param int $timeout
      */
     private function initCurl($timeout)
@@ -270,6 +282,18 @@ abstract class AbstractApi
                 CURLOPT_SSL_VERIFYPEER => 0,
                 CURLOPT_HTTPHEADER => ['Expect:']
             ]);
+        }
+    }
+
+    /**
+     * @param array $options
+     */
+    private function setDebug($options)
+    {
+        if (isset($options['debug']) && is_file($options['debug'])) {
+            $this->debug = $options['debug'];
+        } else {
+            $this->debug = null;
         }
     }
 }
