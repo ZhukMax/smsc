@@ -24,7 +24,7 @@ try {
             'charset' => 'windows-1251',
             'from' => 'api@smsc.ru',
             'post' => true,
-            'debug' => true
+            'debug' => '/home/user/smsc.log'
         ]
     );
 } catch (Exception $exception) {
