@@ -1,4 +1,5 @@
 <?php
+
 namespace Zhukmax\Smsc;
 
 /**
@@ -7,49 +8,30 @@ namespace Zhukmax\Smsc;
  */
 abstract class AbstractApi
 {
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $login;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $password;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $protocol;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $charset;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $from;
-    /**
-     * @var bool
-     */
+    /** @var bool */
     protected $httpPost;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $debug;
-    /**
-     * @var string
-     */
+    /** @var string */
     protected $sender;
-    /**
-     * @var string
-     */
+    /** @var string */
     private $url;
-    /**
-     * @var
-     */
+    /** @var resource|bool */
     private $curl;
 
     /**
      * AbstractApi constructor.
+     *
      * @param string $login
      * @param string $password
      * @param array $options
@@ -150,6 +132,7 @@ abstract class AbstractApi
      * @param string $arg
      * @param array $files
      * @return array
+     * @throws \Exception
      */
     protected function sendCmd($cmd, $arg = "", $files = array())
     {

@@ -1,4 +1,5 @@
 <?php
+
 namespace Zhukmax\Smsc;
 
 /**
@@ -19,7 +20,7 @@ class Api extends AbstractApi
     /**
      * Функция отправки SMS.
      *
-     * @param $phones
+     * @param string $phones Список телефонов через запятую или точку с запятой
      * @param $message
      * @param int $translit
      * @param int $time
@@ -29,6 +30,7 @@ class Api extends AbstractApi
      * @param string $query
      * @param array $files
      * @return mixed
+     * @throws \Exception
      */
     public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = null, $query = "", $files = array())
     {
@@ -83,6 +85,7 @@ class Api extends AbstractApi
      * @param bool $sender
      * @param string $query
      * @return mixed
+     * @throws \Exception
      */
     public function getSmsCost($phones, $message, $translit = 0, $format = 0, $sender = false, $query = "")
     {
@@ -109,6 +112,7 @@ class Api extends AbstractApi
      * @param $phone
      * @param int $all
      * @return mixed
+     * @throws \Exception
      */
     public function getStatus($id, $phone, $all = 0)
     {
@@ -143,6 +147,7 @@ class Api extends AbstractApi
      * Функция получения баланса.
      *
      * @return array|bool
+     * @throws \Exception
      */
     public function getBalance()
     {
