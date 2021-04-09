@@ -6,9 +6,10 @@ namespace Zhukmax\Smsc;
  * Class Api
  * @package Zhukmax\Smsc
  */
-class Api extends AbstractApi
+class Api extends AbstractApi implements BaseInterface, InfoInterface
 {
     /**
+     * @TODO Нужен ли этот метод
      * @param string $property
      * @return mixed
      */
@@ -32,7 +33,7 @@ class Api extends AbstractApi
      * @return mixed
      * @throws \Exception
      */
-    public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = null, $query = "", $files = array())
+    public function sendSms(string $phones, string $message, int $translit = 0, $time = 0, $id = 0, $format = 0, $sender = null, $query = "", $files = array())
     {
         static $formats = array(1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1");
         $sender = isset($sender) ? $sender : $this->sender;
@@ -64,7 +65,7 @@ class Api extends AbstractApi
      * @param string $sender
      * @return mixed
      */
-    public function sendSmsMail($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "")
+    public function sendSmsMail(string $phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "")
     {
         $to = "send@send.smsc.ru";
         $message = $this->login.":".$this->password.":$id:$time:$translit,$format,$sender:$phones:$message";
@@ -108,15 +109,15 @@ class Api extends AbstractApi
     /**
      * Функция проверки статуса отправленного SMS или HLR-запроса.
      *
-     * @param $id
+     * @param string $id ID cообщения или список ID через запятую
      * @param $phone
      * @param int $all
-     * @return mixed
+     * @return array
      * @throws \Exception
      */
-    public function getStatus($id, $phone, $all = 0)
+    public function getStatus(string $id, string $phone, int $all = 0): array
     {
-        $result = $this->sendCmd("status", "phone=".urlencode($phone)."&id=".urlencode($id)."&all=".(int)$all);
+        $result = $this->sendCmd("status", "phone=".urlencode($phone)."&id=".urlencode($id)."&all=$all");
 
         if (!strpos($id, ",")) {
             if ($this->debug) {
@@ -146,21 +147,25 @@ class Api extends AbstractApi
     /**
      * Функция получения баланса.
      *
-     * @return array|bool
+     * @return string
      * @throws \Exception
      */
-    public function getBalance()
+    public function getBalance(): string
     {
         $result = $this->sendCmd("balance");
 
         if ($this->debug) {
-            if (!isset($result[1])){
+            if (!isset($result[1])) {
                 echo "Сумма на счете: ", $result[0], "\n";
             } else{
                 echo "Ошибка №", -$result[1], "\n";
             }
         }
 
-        return isset($result[1]) ? false : $result[0];
+        if (isset($result[1])) {
+            throw new Exception("Ошибка №" . $result[1]);
+        }
+
+        return $result[0];
     }
 }

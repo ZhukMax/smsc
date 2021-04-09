@@ -1,5 +1,6 @@
 {
   "name": "zhukmax/smsc",
+  "version": "2.0",
   "description": "Lib for modern integration smsc.ru service",
   "license": "Apache-2.0",
   "authors": [
@@ -9,7 +10,7 @@
     }
   ],
   "require": {
-    "php": ">=5.6.0",
+    "php": ">=7.2",
     "ext-curl": "*"
   },
   "require-dev": {},

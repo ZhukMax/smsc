@@ -3,7 +3,7 @@
 namespace Zhukmax\Smsc;
 
 /**
- * Class AbstractApi
+ * Class AbstractBase
  * @package Zhukmax\Smsc
  */
 abstract class AbstractApi
@@ -30,19 +30,19 @@ abstract class AbstractApi
     private $curl;
 
     /**
-     * AbstractApi constructor.
+     * AbstractBase constructor.
      *
      * @param string $login
      * @param string $password
      * @param array $options
      * @throws \Exception
      */
-    public function __construct($login, $password, $options = [])
+    public function __construct(string $login, string $password, $options = [])
     {
-        $this->login = $login ?: null;
-        $this->password = $password ?: null;
+        $this->login = $login ?? null;
+        $this->password = $password ?? null;
         if (!$this->login || !$this->password) {
-            throw new \Exception("Логин и пароль обязательные поля!");
+            throw new Exception("Логин и пароль обязательные поля");
         }
 
         $this->protocol = isset($options['https']) ? 'https': 'http';
@@ -59,72 +59,6 @@ abstract class AbstractApi
     }
 
     /**
-     * @param string $property
-     * @return mixed
-     */
-    abstract public function getProperty($property);
-
-    /**
-     * Функция отправки SMS.
-     *
-     * @param $phones
-     * @param $message
-     * @param int $translit
-     * @param int $time
-     * @param int $id
-     * @param int $format
-     * @param string $sender
-     * @param string $query
-     * @param array $files
-     * @return mixed
-     */
-    abstract public function sendSms($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender, $query = "", $files = array());
-
-    /**
-     * SMTP версия функции отправки SMS.
-     *
-     * @param $phones
-     * @param $message
-     * @param int $translit
-     * @param int $time
-     * @param int $id
-     * @param int $format
-     * @param string $sender
-     * @return mixed
-     */
-    abstract public function sendSmsMail($phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "");
-
-    /**
-     * Функция получения стоимости SMS.
-     *
-     * @param $phones
-     * @param $message
-     * @param int $translit
-     * @param int $format
-     * @param bool $sender
-     * @param string $query
-     * @return mixed
-     */
-    abstract public function getSmsCost($phones, $message, $translit = 0, $format = 0, $sender = false, $query = "");
-
-    /**
-     * Функция проверки статуса отправленного SMS или HLR-запроса.
-     *
-     * @param $id
-     * @param $phone
-     * @param int $all
-     * @return mixed
-     */
-    abstract public function getStatus($id, $phone, $all = 0);
-
-    /**
-     * Функция получения баланса.
-     *
-     * @return array|bool
-     */
-    abstract public function getBalance();
-
-    /**
      * Функция вызова запроса.
      * Формирует URL и делает 5 попыток чтения через разные подключения к сервису.
      *
@@ -134,7 +68,7 @@ abstract class AbstractApi
      * @return array
      * @throws \Exception
      */
-    protected function sendCmd($cmd, $arg = "", $files = array())
+    protected function sendCmd(string $cmd, string $arg = "", array $files = []): array
     {
         $url = $_url = str_replace("%s", $cmd, $this->url) . "&" . $arg;
         $i = 0;
