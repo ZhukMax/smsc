@@ -44,11 +44,10 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
             ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : ""), $files);
 
         if ($result[1] > 0) {
-            $debugText = "Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3].\n";
+            $this->log->info("Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3]");
         } else {
-            $debugText = "Ошибка №". -$result[1]. $result[0] ? ", ID: ".$result[0] : "". "\n";
+            $this->log->error("Ошибка №". -$result[1]. $result[0] ? ", ID: ".$result[0] : "");
         }
-        $this->log($debugText);
 
         return $result;
     }
@@ -96,11 +95,11 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
             ($sender === false ? "" : "&sender=".urlencode($sender)).
             "&translit=$translit".($format > 0 ? "&".$formats[$format] : "").($query ? "&$query" : ""));
 
-        if ($this->debug) {
-            if ($m[1] > 0)
-                echo "Стоимость рассылки: $m[0]. Всего SMS: $m[1]\n";
-            else
-                echo "Ошибка №", -$m[1], "\n";
+        if ($m[1] > 0) {
+            $this->log->info("Стоимость рассылки: $m[0]. Всего SMS: $m[1]");
+        } else {
+            // @TODO заменить текст ошибки
+            $this->log->error("Ошибка № $m[1]");
         }
 
         return $m;
@@ -120,12 +119,10 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
         $result = $this->sendCmd("status", "phone=".urlencode($phone)."&id=".urlencode($id)."&all=$all");
 
         if (!strpos($id, ",")) {
-            if ($this->debug) {
-                if ($result[1] != "" && $result[1] >= 0) {
-                    echo "Статус SMS = $result[0]", $result[1] ? ", время изменения статуса - " . date("d.m.Y H:i:s", $result[1]) : "", "\n";
-                } else {
-                    echo "Ошибка №", -$result[1], "\n";
-                }
+            if ($result[1] != "" && $result[1] >= 0) {
+                $this->log->info("Статус SMS = $result[0], время изменения статуса - " . date("d.m.Y H:i:s", $result[1]));
+            } else {
+                $this->log->error("Ошибка № $result[1]");
             }
 
             if ($all && count($result) > 9 && (!isset($result[$idx = $all == 1 ? 14 : 17]) || $result[$idx] != "HLR")) {
@@ -154,18 +151,12 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
     {
         $result = $this->sendCmd("balance");
 
-        if ($this->debug) {
-            if (!isset($result[1])) {
-                echo "Сумма на счете: ", $result[0], "\n";
-            } else{
-                echo "Ошибка №", -$result[1], "\n";
-            }
-        }
-
         if (isset($result[1])) {
+            $this->log->error("Ошибка № $result[1]");
             throw new Exception("Ошибка №" . $result[1]);
         }
 
+        $this->log->info("Сумма на счете: $result[0]");
         return $result[0];
     }
 }

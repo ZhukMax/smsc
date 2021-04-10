@@ -20,8 +20,8 @@ abstract class AbstractApi
     protected $from;
     /** @var bool */
     protected $httpPost;
-    /** @var string */
-    protected $debug;
+    /** @var Logger */
+    protected $log;
     /** @var string */
     protected $sender;
     /** @var string */
@@ -51,7 +51,8 @@ abstract class AbstractApi
         $this->httpPost = isset($options['post']) ?: false;
         $this->sender = isset($options['sender']) ?: null;
 
-        $this->setDebug($options);
+        // Initialize logger
+        $this->log = new Logger($options['log'] ?? '');
 
         $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
             urlencode($this->login) . "&psw=" . urlencode($this->password) .
@@ -82,10 +83,7 @@ abstract class AbstractApi
         } while ($result == "" && $i < 5);
 
         if ($result == "") {
-            if ($this->debug) {
-                echo "Ошибка чтения адреса: $url\n";
-            }
-
+            $this->log->error("Ошибка чтения адреса: $url");
             $result = ",";
         }
 
@@ -145,9 +143,7 @@ abstract class AbstractApi
 
             $result = curl_exec($this->curl);
         } else if ($files) {
-            if ($this->debug){
-                throw new \Exception("Не установлен модуль curl для передачи файлов!");
-            }
+            throw new \Exception("Не установлен модуль curl для передачи файлов!");
         } else if ($this->protocol === 'https' && function_exists("fsockopen")) {
             $m = parse_url($url);
 
@@ -175,17 +171,6 @@ abstract class AbstractApi
     }
 
     /**
-     * @param string $message
-     */
-    protected function log($message = '')
-    {
-        if ($this->debug) {
-            $data = date("Y-m-d H:i:s") . " | " . $message . "\n";
-            file_put_contents($this->debug, $data, FILE_APPEND);
-        }
-    }
-
-    /**
      * @param int $timeout
      */
     private function initCurl($timeout)
@@ -199,18 +184,6 @@ abstract class AbstractApi
                 CURLOPT_SSL_VERIFYPEER => 0,
                 CURLOPT_HTTPHEADER => ['Expect:']
             ]);
-        }
-    }
-
-    /**
-     * @param array $options
-     */
-    private function setDebug($options)
-    {
-        if (isset($options['debug']) && is_file($options['debug'])) {
-            $this->debug = $options['debug'];
-        } else {
-            $this->debug = null;
         }
     }
 }
