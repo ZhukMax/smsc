@@ -6,3 +6,4 @@
 *.lnk
 *.ini
 /*.php
+*.cache
