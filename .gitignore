@@ -7,3 +7,4 @@
 *.ini
 /*.php
 *.cache
+*.log

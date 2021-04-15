@@ -2,6 +2,8 @@
 
 namespace Zhukmax\Smsc;
 
+use GuzzleHttp\Client;
+
 /**
  * Class AbstractBase
  * @package Zhukmax\Smsc
@@ -24,6 +26,9 @@ abstract class AbstractApi
     protected $log;
     /** @var string */
     protected $sender;
+
+    /** @var Client */
+    private $client;
     /** @var string */
     private $url;
     /** @var resource|bool */
@@ -42,14 +47,17 @@ abstract class AbstractApi
         $this->login = $login ?? null;
         $this->password = $password ?? null;
         if (!$this->login || !$this->password) {
-            throw new Exception("Логин и пароль обязательные поля");
+            throw new Exception("Login and password is обязательные поля");
         }
 
         $this->protocol = isset($options['https']) ? 'https': 'http';
-        $this->charset = isset($options['charset']) ? $options['charset'] : 'utf-8';
-        $this->from = isset($options['from']) ? $options['from'] : 'api@smsc.ru';
+        $this->charset = $options['charset'] ?? 'utf-8';
+        $this->from = $options['from'] ?? 'api@smsc.ru';
         $this->httpPost = isset($options['post']) ?: false;
         $this->sender = isset($options['sender']) ?: null;
+
+        // Initialize GuzzleHttp client
+        $this->client = new Client();
 
         // Initialize logger
         $this->log = new Logger($options['log'] ?? '');

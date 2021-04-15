@@ -22,7 +22,7 @@ class Logger
     {
         if ($logFile) {
             $this->logger = new MonoLogger('smsc');
-            $this->logger->pushHandler(new StreamHandler($logFile, MonoLogger::WARNING));
+            $this->logger->pushHandler(new StreamHandler($logFile, MonoLogger::INFO));
         }
     }
 
