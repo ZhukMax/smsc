@@ -1,5 +1,7 @@
 <?php
 
+namespace Zhukmax\Smsc\Tests;
+
 use PHPUnit\Framework\TestCase;
 use Zhukmax\Smsc\Logger;
 

@@ -26,13 +26,14 @@ interface InfoInterface
      *
      * @param string $id - ID сообщения или список ID через запятую
      * @param string $phone - номер телефона или список номеров через запятую
-     * @param int $all - вернуть все данные отправленного SMS, включая текст сообщения (0,1 или 2)
+     * @param int $all - вернуть все данные отправленного SMS, включая текст сообщения (0, 1 или 2)
      * @return array
      */
     public function getStatus(string $id, string $phone, int $all): array;
 
     /**
      * Функция получения баланса.
+     *
      * @return string
      */
     public function getBalance(): string;

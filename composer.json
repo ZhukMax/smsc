@@ -18,6 +18,9 @@
     "phpunit/phpunit": "^9.5"
   },
   "autoload": {
-    "classmap": ["src"]
+    "psr-4": {
+      "Zhukmax\\Smsc\\": "src/",
+      "Zhukmax\\Smsc\\Tests\\": "tests/"
+    }
   }
 }

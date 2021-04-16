@@ -9,16 +9,6 @@ namespace Zhukmax\Smsc;
 class Api extends AbstractApi implements BaseInterface, InfoInterface
 {
     /**
-     * @TODO Нужен ли этот метод
-     * @param string $property
-     * @return mixed
-     */
-    public function getProperty($property)
-    {
-        return $this->$property;
-    }
-
-    /**
      * Функция отправки SMS.
      *
      * @param string $phones Список телефонов через запятую или точку с запятой

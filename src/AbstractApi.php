@@ -5,7 +5,7 @@ namespace Zhukmax\Smsc;
 use GuzzleHttp\Client;
 
 /**
- * Class AbstractBase
+ * Class AbstractApi
  * @package Zhukmax\Smsc
  */
 abstract class AbstractApi
@@ -22,27 +22,27 @@ abstract class AbstractApi
     protected $from;
     /** @var bool */
     protected $httpPost;
-    /** @var Logger */
-    protected $log;
     /** @var string */
     protected $sender;
-
-    /** @var Client */
-    private $client;
     /** @var string */
-    private $url;
+    protected $url;
+    /** @var Client */
+    protected $client;
+    /** @var Logger */
+    protected $log;
+
     /** @var resource|bool */
     private $curl;
 
     /**
-     * AbstractBase constructor.
+     * AbstractApi constructor.
      *
      * @param string $login
      * @param string $password
      * @param array $options
      * @throws \Exception
      */
-    public function __construct(string $login, string $password, $options = [])
+    public function __construct(string $login, string $password, array $options = [])
     {
         $this->login = $login ?? null;
         $this->password = $password ?? null;
@@ -54,7 +54,7 @@ abstract class AbstractApi
         $this->charset = $options['charset'] ?? 'utf-8';
         $this->from = $options['from'] ?? 'api@smsc.ru';
         $this->httpPost = isset($options['post']) ?: false;
-        $this->sender = isset($options['sender']) ?: null;
+        $this->sender = $options['sender'] ?? null;
 
         // Initialize GuzzleHttp client
         $this->client = new Client();
