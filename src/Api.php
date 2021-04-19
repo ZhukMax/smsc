@@ -16,22 +16,21 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
      * @param int $translit
      * @param int $time
      * @param int $id
-     * @param int $format
+     * @param int|null $format
      * @param string $sender
      * @param string $query
      * @param array $files
      * @return mixed
      * @throws \Exception
      */
-    public function sendSms(string $phones, string $message, int $translit = 0, $time = 0, $id = 0, $format = 0, $sender = null, $query = "", $files = array())
+    public function sendSms(string $phones, string $message, int $translit = 0, $time = 0, $id = 0, int $format = null, $sender = null, $query = "", $files = array())
     {
-        static $formats = array(1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1");
         $sender = isset($sender) ? $sender : $this->sender;
 
-        $result = $this->sendCmd("send", "cost=3&phones=".urlencode($phones)."&mes=".urlencode($message).
-            "&translit=$translit&id=$id".($format > 0 ? "&".$formats[$format] : "").
+        $result = $this->sendCmd("send", ["cost=3&phones=".urlencode($phones)."&mes=".urlencode($message).
+            "&translit=$translit&id=$id".self::format($format).
             (!isset($sender) ? "" : "&sender=".urlencode($sender)).
-            ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : ""), $files);
+            ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : "")], $files);
 
         if ($result[1] > 0) {
             $this->log->info("Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3]");
@@ -68,52 +67,54 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
     /**
      * Функция получения стоимости SMS.
      *
-     * @param $phones
-     * @param $message
+     * @param array $phones
+     * @param string $message
      * @param int $translit
      * @param int $format
-     * @param bool $sender
+     * @param string $sender
      * @param string $query
      * @return mixed
      * @throws \Exception
      */
-    public function getSmsCost($phones, $message, $translit = 0, $format = 0, $sender = false, $query = "")
+    public function getSmsCost(array $phones, string $message, int $translit = 0, int $format = null, string $sender = '', string $query = "")
     {
-        static $formats = array(1 => "flash=1", "push=1", "hlr=1", "bin=1", "bin=2", "ping=1", "mms=1", "mail=1", "call=1");
+        $result = $this->sendCmd("send", [
+            "cost" => 1,
+            "phones" => $phones,
+            "mes" => urlencode($message),
+            "sender" => $sender,
+            "translit" => $translit,
+            self::format($format),
+            $query
+        ]);
 
-        $m = $this->sendCmd("send", "cost=1&phones=".urlencode($phones)."&mes=".urlencode($message).
-            ($sender === false ? "" : "&sender=".urlencode($sender)).
-            "&translit=$translit".($format > 0 ? "&".$formats[$format] : "").($query ? "&$query" : ""));
-
-        if ($m[1] > 0) {
-            $this->log->info("Стоимость рассылки: $m[0]. Всего SMS: $m[1]");
+        if ($result[1] > 0) {
+            $this->log->info("Стоимость рассылки: $result[0]. Всего SMS: $result[1]");
         } else {
             // @TODO заменить текст ошибки
-            $this->log->error("Ошибка № $m[1]");
+            $this->log->error("Ошибка № $result[1]");
         }
 
-        return $m;
+        return $result;
     }
 
     /**
      * Функция проверки статуса отправленного SMS или HLR-запроса.
      *
-     * @param string $id ID cообщения или список ID через запятую
-     * @param $phone
+     * @param array $id
+     * @param array $phones
      * @param int $all
      * @return array
      * @throws \Exception
      */
-    public function getStatus(string $id, string $phone, int $all = 0): array
+    public function getStatus(array $id, array $phones, int $all = 0): array
     {
-        $result = $this->sendCmd("status", "phone=".urlencode($phone)."&id=".urlencode($id)."&all=$all");
+        $result = $this->sendCmd("status", [
+            "id" => $id, "phone" => $phones, "all" => $all
+        ]);
 
-        if (!strpos($id, ",")) {
-            if ($result[1] != "" && $result[1] >= 0) {
-                $this->log->info("Статус SMS = $result[0], время изменения статуса - " . date("d.m.Y H:i:s", $result[1]));
-            } else {
-                $this->log->error("Ошибка № $result[1]");
-            }
+        if (count($id) == 1) {
+            $this->logStatus($result);
 
             if ($all && count($result) > 9 && (!isset($result[$idx = $all == 1 ? 14 : 17]) || $result[$idx] != "HLR")) {
                 $result = explode(",", implode(",", $result), $all == 1 ? 9 : 12);
@@ -132,6 +133,18 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
     }
 
     /**
+     * @param array $result
+     */
+    private function logStatus(array $result)
+    {
+        if ($result[1] != "" && $result[1] >= 0) {
+            $this->log->info("Статус SMS = $result[0], время изменения статуса - " . date("d.m.Y H:i:s", $result[1]));
+        } else {
+            $this->log->error("Ошибка № $result[1]");
+        }
+    }
+
+    /**
      * Функция получения баланса.
      *
      * @return string
@@ -142,8 +155,9 @@ class Api extends AbstractApi implements BaseInterface, InfoInterface
         $result = $this->sendCmd("balance");
 
         if (isset($result[1])) {
-            $this->log->error("Ошибка № $result[1]");
-            throw new Exception("Ошибка №" . $result[1]);
+            $errorText = "Ошибка № $result[1]";
+            $this->log->error($errorText);
+            throw new Exception($errorText);
         }
 
         $this->log->info("Сумма на счете: $result[0]");

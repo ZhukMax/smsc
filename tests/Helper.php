@@ -7,13 +7,27 @@ use ReflectionException;
 
 trait Helper
 {
-    protected function accessProtected($obj, $prop) {
+    public function accessProtectedProperty($object, $prop)
+    {
         try {
-            $reflection = new ReflectionClass($obj);
+            $reflection = new ReflectionClass($object);
             $property = $reflection->getProperty($prop);
             $property->setAccessible(true);
 
-            return $property->getValue($obj);
+            return $property->getValue($object);
+        } catch (ReflectionException $e) {
+            return null;
+        }
+    }
+
+    public static function callProtectedMethod($object, $method, array $args = [])
+    {
+        try {
+            $class = new ReflectionClass(get_class($object));
+            $method = $class->getMethod($method);
+            $method->setAccessible(true);
+
+            return $method->invokeArgs($object, $args);
         } catch (ReflectionException $e) {
             return null;
         }

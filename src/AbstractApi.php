@@ -31,6 +31,21 @@ abstract class AbstractApi
     /** @var Logger */
     protected $log;
 
+    /** @var array */
+    private static $formats = [
+        "flash=1",
+        "push=1",
+        "hlr=1",
+        "bin=1",
+        "bin=2",
+        "ping=1",
+        "mms=1",
+        "mail=1",
+        "call=1",
+        "viber=1",
+        "soc=1"
+    ];
+
     /** @var resource|bool */
     private $curl;
 
@@ -68,18 +83,53 @@ abstract class AbstractApi
     }
 
     /**
+     * @param int|null $id
+     * @return string
+     */
+    protected static function format(int $id = null): string
+    {
+        return $id ? "&".self::$formats[$id] : "";
+    }
+
+    /**
+     * @param array $props
+     * @return string
+     */
+    protected static function argString(array $props = []): string
+    {
+        foreach ($props as $key => $value) {
+            if (empty($value)) {
+                continue;
+            }
+
+            if (!is_string($key)) {
+                $args[] = $value;
+                continue;
+            }
+
+            if (is_array($value)) {
+                $value = urlencode(implode(',', $value));
+            }
+
+            $args[] = "$key=$value";
+        }
+
+        return "&" . implode('&', $args ?? []);
+    }
+
+    /**
      * Функция вызова запроса.
      * Формирует URL и делает 5 попыток чтения через разные подключения к сервису.
      *
      * @param string $cmd
-     * @param string $arg
+     * @param array $props
      * @param array $files
      * @return array
      * @throws \Exception
      */
-    protected function sendCmd(string $cmd, string $arg = "", array $files = []): array
+    protected function sendCmd(string $cmd, array $props = [], array $files = []): array
     {
-        $url = $_url = str_replace("%s", $cmd, $this->url) . "&" . $arg;
+        $url = $_url = str_replace("%s", $cmd, $this->url) . self::argString($props);
         $i = 0;
 
         do {
@@ -98,9 +148,7 @@ abstract class AbstractApi
         $delimiter = ",";
 
         if ($cmd == "status") {
-            parse_str($arg, $m);
-
-            if (strpos($m["id"], ",")) {
+            if (strpos($props["id"], ",")) {
                 $delimiter = "\n";
             }
         }
