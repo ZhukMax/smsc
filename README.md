@@ -131,6 +131,9 @@ _для HLR-запроса:_
 Для работы должно быть доступно:
 curl или fsockopen (только http) или включена опция allow_url_fopen для file_get_contents
 
+    
+[![Stargazers repo roster for @ZhukMax/smsc](https://reporoster.com/stars/ZhukMax/smsc)](https://github.com/ZhukMax/smsc/stargazers)
+
 ## Лицензия
 
 The Apache License Version 2.0. Текст лицензии находится в файле [License File](license.md).
