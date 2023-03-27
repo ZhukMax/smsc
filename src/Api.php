@@ -6,7 +6,7 @@ namespace Zhukmax\Smsc;
  * Class Api
  * @package Zhukmax\Smsc
  */
-class Api extends AbstractApi implements BaseInterface, InformationInterface
+class Api extends AbstractApi
 {
     /**
      * Функция отправки SMS.
@@ -46,7 +46,7 @@ class Api extends AbstractApi implements BaseInterface, InformationInterface
         }
 
         if ($request->format !== null) {
-            $params = array_merge($params, (array)self::format($request->format));
+            $params['format'] = self::format($request->format);
         }
 
         if ($request->time) {

@@ -1,6 +1,8 @@
 <?php
 
-namespace Zhukmax\Smsc;
+namespace Zhukmax\Smsc\Interfaces;
+
+use Zhukmax\Smsc\SmsRequest;
 
 /**
  * Interface BaseInterface

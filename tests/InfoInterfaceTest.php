@@ -8,8 +8,7 @@ use Zhukmax\Smsc\Exception;
 
 class InfoInterfaceTest extends TestCase
 {
-    private string $login = 'test';
-    private string $pass = '123';
+    use Helper;
 
     public function testGetBalanceSuccess()
     {

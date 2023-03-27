@@ -7,6 +7,11 @@ use ReflectionException;
 
 trait Helper
 {
+    private string $login = 'test';
+    private string $pass = '123';
+    private string $from = 'test@domain.com';
+    private string $sender = 'Sender';
+
     public function accessProtectedProperty($object, $prop)
     {
         try {
@@ -30,6 +35,20 @@ trait Helper
             return $method->invokeArgs($object, $args);
         } catch (ReflectionException $e) {
             return null;
+        }
+    }
+
+    public function setProtectedProperty($object, $prop, $value): bool
+    {
+        try {
+            $reflection = new ReflectionClass($object);
+            $property = $reflection->getProperty($prop);
+            $property->setAccessible(true);
+            $property->setValue($object, $value);
+
+            return true;
+        } catch (ReflectionException $e) {
+            return false;
         }
     }
 }

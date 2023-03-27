@@ -1,6 +1,6 @@
 <?php
 
-namespace Zhukmax\Smsc;
+namespace Zhukmax\Smsc\Interfaces;
 
 /**
  * Interface InfoInterface

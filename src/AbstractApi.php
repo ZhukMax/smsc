@@ -3,27 +3,23 @@
 namespace Zhukmax\Smsc;
 
 use GuzzleHttp\Client;
+use Zhukmax\Smsc\Interfaces\BaseInterface;
+use Zhukmax\Smsc\Interfaces\InformationInterface;
 
 /**
  * Class AbstractApi
  * @package Zhukmax\Smsc
  */
-abstract class AbstractApi
+abstract class AbstractApi implements BaseInterface, InformationInterface
 {
-    /** @var string */
-    protected $protocol;
-    /** @var string */
-    protected $charset;
-    /** @var string */
-    protected $from;
-    /** @var bool */
-    protected $httpPost;
-    /** @var string */
-    protected $sender;
+    protected string $protocol;
+    protected string $charset;
+    protected string $from;
+    protected bool $httpPost;
+    protected ?string $sender;
 
     protected string $url;
-    /** @var Client */
-    protected $client;
+    protected Client $client;
 
     protected Logger $log;
 
@@ -79,69 +75,61 @@ abstract class AbstractApi
         return $id ? "&".self::$formats[$id] : "";
     }
 
-    /**
-     * @param array $props
-     * @return string
-     */
     protected static function argString(array $props = []): string
     {
+        $args = [];
+
         foreach ($props as $key => $value) {
-            if (empty($value)) {
-                continue;
-            }
-
-            if (!is_string($key)) {
-                $args[] = $value;
-                continue;
-            }
-
             if (is_array($value)) {
                 $value = urlencode(implode(',', $value));
             }
 
-            $args[] = "$key=$value";
+            if (!empty($value)) {
+                $args[] = is_string($key) ? "$key=$value" : $value;
+            }
         }
 
-        return "&" . implode('&', $args ?? []);
+        return $args ? '&' . implode('&', $args) : '';
     }
 
     /**
      * Функция вызова запроса.
      * Формирует URL и делает 5 попыток чтения через разные подключения к сервису.
      *
-     * @param string $cmd
-     * @param array $props
-     * @param array $files
-     * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     protected function sendCmd(string $cmd, array $props = [], array $files = []): array
     {
-        $url = $_url = str_replace("%s", $cmd, $this->url) . self::argString($props);
-        $i = 0;
+        $url = $this->buildUrl($cmd, $props);
+        $result = '';
 
-        do {
-            if ($i++) {
-                $url = str_replace('://', '://www' . $i, $_url);
-            }
-
+        for ($i = 0; $i < 5 && $result === ''; $i++) {
             $result = $this->readUrl($url, $files, 3 + $i);
-        } while ($result == "" && $i < 5);
-
-        if ($result == "") {
-            $this->log->error("Ошибка чтения адреса: $url");
-            $result = ",";
-        }
-
-        $delimiter = ",";
-
-        if ($cmd == "status") {
-            if (strpos($props["id"], ",")) {
-                $delimiter = "\n";
+            if ($result === '') {
+                $url = $this->replaceUrl($url, $i);
             }
         }
+
+        if ($result === '') {
+            $message = "Ошибка чтения адреса: $url";
+            $this->log->error($message);
+            throw new Exception($message);
+        }
+
+        $delimiter = str_contains($cmd, 'status') && str_contains($props['id'], ',') ? "\n" : ',';
 
         return explode($delimiter, $result);
+    }
+
+    private function buildUrl(string $cmd, array $props): string
+    {
+        $url = str_replace('%s', $cmd, $this->url);
+        return $url . self::argString($props);
+    }
+
+    private function replaceUrl(string $url, int $i): string
+    {
+        return str_replace('://', "://www{$i}", $url);
     }
 
     /**
@@ -153,7 +141,7 @@ abstract class AbstractApi
      * @return bool|mixed|string
      * @throws \Exception
      */
-    protected function readUrl($url, $files, $tm = 5)
+    protected function readUrl($url, $files, int $tm = 5): mixed
     {
         $post = $this->httpPost || strlen($url) > 2000 || $files;
         $result = "";
