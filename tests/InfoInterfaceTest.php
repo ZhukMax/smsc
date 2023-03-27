@@ -8,18 +8,8 @@ use Zhukmax\Smsc\Exception;
 
 class InfoInterfaceTest extends TestCase
 {
-    private $login = 'test';
-    private $pass = '123';
-
-//    protected function setUp(): void
-//    {
-//        $this->api = new Api($this->login, $this->pass);
-//    }
-//
-//    protected function tearDown(): void
-//    {
-//        unset($this->api);
-//    }
+    private string $login = 'test';
+    private string $pass = '123';
 
     public function testGetBalanceSuccess()
     {
@@ -44,7 +34,4 @@ class InfoInterfaceTest extends TestCase
         $this->expectExceptionMessage("Ошибка № 500");
         $mock->getBalance();
     }
-
-//    public function testGetStatus()
-//    {}
 }

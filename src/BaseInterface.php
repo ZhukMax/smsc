@@ -8,6 +8,6 @@ namespace Zhukmax\Smsc;
  */
 interface BaseInterface
 {
-    public function sendSms(string $phones, string $message, int $translit, $time, $id, int $format, $sender, $query, $files);
+    public function sendSms(SmsRequest $request): array;
     public function sendSmsMail(string $phones, $message, $translit, $time, $id, $format, $sender);
 }

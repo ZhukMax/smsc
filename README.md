@@ -11,7 +11,7 @@
 $ composer require zhukmax/smsc
 ```
 **Для работы должно быть доступно**:
-curl или fsockopen (только http) или включена опция allow_url_fopen для file_get_contents
+php версии 8.0 и выше, curl или fsockopen (только http) или включена опция allow_url_fopen для file_get_contents
 
 ## Свойства конструктора
 Конструктор на вход принимает:

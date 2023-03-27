@@ -6,11 +6,11 @@
   "authors": [
     {
       "name": "Zhuk Max",
-      "email": "zhukmax@ya.ru"
+      "email": "mail@zhukmax.com"
     }
   ],
   "require": {
-    "php": ">=7.2",
+    "php": ">=8.0",
     "monolog/monolog": "^2.2",
     "guzzlehttp/guzzle": "^7.3"
   },

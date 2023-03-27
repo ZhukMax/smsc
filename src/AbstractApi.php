@@ -11,10 +11,6 @@ use GuzzleHttp\Client;
 abstract class AbstractApi
 {
     /** @var string */
-    protected $login;
-    /** @var string */
-    protected $password;
-    /** @var string */
     protected $protocol;
     /** @var string */
     protected $charset;
@@ -24,15 +20,14 @@ abstract class AbstractApi
     protected $httpPost;
     /** @var string */
     protected $sender;
-    /** @var string */
-    protected $url;
+
+    protected string $url;
     /** @var Client */
     protected $client;
-    /** @var Logger */
-    protected $log;
 
-    /** @var array */
-    private static $formats = [
+    protected Logger $log;
+
+    private static array $formats = [
         "flash=1",
         "push=1",
         "hlr=1",
@@ -50,25 +45,18 @@ abstract class AbstractApi
     private $curl;
 
     /**
-     * AbstractApi constructor.
-     *
-     * @param string $login
-     * @param string $password
-     * @param array $options
      * @throws \Exception
      */
-    public function __construct(string $login, string $password, array $options = [])
+    public function __construct(protected string $login, protected string $password, array $options = [])
     {
-        $this->login = $login ?? null;
-        $this->password = $password ?? null;
         if (!$this->login || !$this->password) {
-            throw new Exception("Login and password is обязательные поля");
+            throw new Exception("Login and password is required");
         }
 
         $this->protocol = isset($options['https']) ? 'https': 'http';
         $this->charset = $options['charset'] ?? 'utf-8';
         $this->from = $options['from'] ?? 'api@smsc.ru';
-        $this->httpPost = isset($options['post']) ?: false;
+        $this->httpPost = isset($options['post']);
         $this->sender = $options['sender'] ?? null;
 
         // Initialize GuzzleHttp client

@@ -6,7 +6,7 @@ namespace Zhukmax\Smsc;
  * Interface InfoInterface
  * @package Zhukmax\Smsc
  */
-interface InfoInterface
+interface InformationInterface
 {
     /**
      * Функция получения стоимости SMS.

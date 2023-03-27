@@ -10,10 +10,10 @@ class ApiTest extends TestCase
 {
     use Helper;
 
-    private $login = 'test';
-    private $pass = '123';
-    private $from = 'test@domain.com';
-    private $sender = 'Sender';
+    private string $login = 'test';
+    private string $pass = '123';
+    private string $from = 'test@domain.com';
+    private string $sender = 'Sender';
 
     public function testConstructorNullLoginPass()
     {

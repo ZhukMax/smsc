@@ -11,48 +11,26 @@ use Monolog\Handler\StreamHandler;
  */
 class Logger
 {
-    /** @var MonoLogger */
-    private $logger;
+    private MonoLogger $logger;
 
-    /**
-     * Logger constructor.
-     * @param string $logFile
-     */
-    public function __construct(string $logFile = '')
+    public function __construct(string $logFile)
     {
-        if ($logFile) {
-            $this->logger = new MonoLogger('smsc');
-            $this->logger->pushHandler(new StreamHandler($logFile, MonoLogger::INFO));
-        }
+        $this->logger = new MonoLogger('smsc');
+        $this->logger->pushHandler(new StreamHandler($logFile, MonoLogger::INFO));
     }
 
-    /**
-     * @param string $message
-     */
     public function info(string $message): void
     {
-        if ($this->logger) {
-            $this->logger->info($message);
-        }
+        $this->logger->info($message);
     }
 
-    /**
-     * @param string $message
-     */
     public function warning(string $message): void
     {
-        if ($this->logger) {
-            $this->logger->warning($message);
-        }
+        $this->logger->warning($message);
     }
 
-    /**
-     * @param string $message
-     */
     public function error(string $message): void
     {
-        if ($this->logger) {
-            $this->logger->error($message);
-        }
+        $this->logger->error($message);
     }
 }

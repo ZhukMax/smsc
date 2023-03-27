@@ -6,39 +6,66 @@ namespace Zhukmax\Smsc;
  * Class Api
  * @package Zhukmax\Smsc
  */
-class Api extends AbstractApi implements BaseInterface, InfoInterface
+class Api extends AbstractApi implements BaseInterface, InformationInterface
 {
     /**
      * Функция отправки SMS.
-     *
-     * @param string $phones Список телефонов через запятую или точку с запятой
-     * @param $message
-     * @param int $translit
-     * @param int $time
-     * @param int $id
-     * @param int|null $format
-     * @param string $sender
-     * @param string $query
-     * @param array $files
-     * @return mixed
      * @throws \Exception
      */
-    public function sendSms(string $phones, string $message, int $translit = 0, $time = 0, $id = 0, int $format = null, $sender = null, $query = "", $files = array())
+    public function sendSms(SmsRequest $request): array
     {
-        $sender = isset($sender) ? $sender : $this->sender;
-
-        $result = $this->sendCmd("send", ["cost=3&phones=".urlencode($phones)."&mes=".urlencode($message).
-            "&translit=$translit&id=$id".self::format($format).
-            (!isset($sender) ? "" : "&sender=".urlencode($sender)).
-            ($time ? "&time=".urlencode($time) : "").($query ? "&$query" : "")], $files);
+        $params = $this->prepareParams($request);
+        $result = $this->sendCmd("send", $params, $request->files);
 
         if ($result[1] > 0) {
-            $this->log->info("Сообщение отправлено успешно. ID: $result[0], всего SMS: $result[1], стоимость: $result[2], баланс: $result[3]");
+            $this->log->info(printf(
+                "Сообщение отправлено успешно. ID: %d, всего SMS: %d, стоимость: %d, баланс: %d",
+                $result[0], $result[1], $result[2], $result[3]
+            ));
         } else {
-            $this->log->error("Ошибка №". -$result[1]. $result[0] ? ", ID: ".$result[0] : "");
+            $this->log->error("Ошибка №" . -$result[1] . ($result[0] ? ", ID: " . $result[0] : ""));
         }
 
         return $result;
+    }
+
+    protected function prepareParams(SmsRequest $request): array
+    {
+        $params = [
+            'cost' => 3,
+            'phones' => urlencode($request->phones),
+            'mes' => urlencode($request->message),
+            'translit' => $request->translit,
+            'id' => $request->id,
+        ];
+
+        $sender = $request->sender ?? $this->sender;
+
+        if (isset($sender)) {
+            $params['sender'] = urlencode($sender);
+        }
+
+        if ($request->format !== null) {
+            $params = array_merge($params, (array)self::format($request->format));
+        }
+
+        if ($request->time) {
+            $params['time'] = urlencode($request->time);
+        }
+
+        if ($request->query) {
+            $params = array_merge($params, $this->parseQuery($request->query));
+        }
+
+        return $params;
+    }
+
+    protected function parseQuery(string $query): array
+    {
+        $params = [];
+        parse_str($query, $params);
+
+        return $params;
     }
 
     /**
