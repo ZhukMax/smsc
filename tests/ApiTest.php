@@ -2,6 +2,7 @@
 
 namespace Zhukmax\Smsc\Tests;
 
+use GuzzleHttp\Exception\GuzzleException;
 use PHPUnit\Framework\TestCase;
 use Zhukmax\Smsc\Api;
 use Zhukmax\Smsc\Exception;
@@ -200,5 +201,33 @@ class ApiTest extends TestCase
 
         $this->assertIsArray($result);
         return $result;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testReadUrlWithCurl(): void
+    {
+        $api = new Api($this->login, $this->pass);
+        $url = $this->accessProtectedProperty($api, 'url');
+        $files = [];
+        $result = $this->callProtectedMethod($api, 'readUrl', [$url, $files]);
+
+        $this->assertIsString($result);
+        $this->assertNotEmpty($result);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testReadUrlWithHttps(): void
+    {
+        $api = new Api($this->login, $this->pass, ['https' => true]);
+        $url = $this->accessProtectedProperty($api, 'url');
+        $files = [];
+        $result = $this->callProtectedMethod($api, 'readUrl', [$url, $files]);
+
+        $this->assertIsString($result);
+        $this->assertNotEmpty($result);
     }
 }

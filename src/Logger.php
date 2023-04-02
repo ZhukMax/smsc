@@ -8,6 +8,7 @@ use Monolog\Handler\StreamHandler;
 /**
  * Class Logger
  * @package Zhukmax\Smsc
+ * @author Max Zhuk <mail@zhukmax.com>
  */
 class Logger
 {

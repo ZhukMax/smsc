@@ -11,5 +11,5 @@ use Zhukmax\Smsc\SmsRequest;
 interface BaseInterface
 {
     public function sendSms(SmsRequest $request): array;
-    public function sendSmsMail(string $phones, $message, $translit, $time, $id, $format, $sender);
+    public function sendSmsMail(string $phones, string $message, int $translit, int $time, $id, int $format);
 }

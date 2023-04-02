@@ -5,6 +5,7 @@ namespace Zhukmax\Smsc;
 /**
  * Class Api
  * @package Zhukmax\Smsc
+ * @author Max Zhuk <mail@zhukmax.com>
  */
 class Api extends AbstractApi
 {
@@ -70,20 +71,11 @@ class Api extends AbstractApi
 
     /**
      * SMTP версия функции отправки SMS.
-     *
-     * @param $phones
-     * @param $message
-     * @param int $translit
-     * @param int $time
-     * @param int $id
-     * @param int $format
-     * @param string $sender
-     * @return mixed
      */
-    public function sendSmsMail(string $phones, $message, $translit = 0, $time = 0, $id = 0, $format = 0, $sender = "")
+    public function sendSmsMail(string $phones, string $message, int $translit = 0, int $time = 0, $id = 0, int $format = 0): bool
     {
         $to = "send@send.smsc.ru";
-        $message = $this->login.":".$this->password.":$id:$time:$translit,$format,$sender:$phones:$message";
+        $message = $this->login.":".$this->password.":$id:$time:$translit,$format,$this->sender:$phones:$message";
         $headers = "From: " . $this->from .
             "\nContent-Type: text/plain; charset=" .
             $this->charset . "\n";
@@ -97,11 +89,11 @@ class Api extends AbstractApi
      * @param array $phones
      * @param string $message
      * @param int $translit
-     * @param int $format
+     * @param int|null $format
      * @param string $sender
      * @param string $query
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     public function getSmsCost(array $phones, string $message, int $translit = 0, int $format = null, string $sender = '', string $query = "")
     {
@@ -159,10 +151,7 @@ class Api extends AbstractApi
         return $result;
     }
 
-    /**
-     * @param array $result
-     */
-    private function logStatus(array $result)
+    private function logStatus(array $result): void
     {
         if ($result[1] != "" && $result[1] >= 0) {
             $this->log->info("Статус SMS = $result[0], время изменения статуса - " . date("d.m.Y H:i:s", $result[1]));
