@@ -6,10 +6,30 @@ use Zhukmax\Smsc\SmsRequest;
 
 /**
  * Interface BaseInterface
- * @package Zhukmax\Smsc
+ *
+ * @category Interfaces
+ * @package  Zhukmax\Smsc
+ * @author   Max Zhuk <mail@zhukmax.com>
+ * @license  https://github.com/ZhukMax/smsc/tree/master/src/LICENSE Apache-2.0
+ * @link     https://github.com/ZhukMax/smsc/tree/master/src/Interfaces/BaseInterface.php
  */
 interface BaseInterface
 {
+    /**
+     * Функция отправки SMS
+     *
+     * @param SmsRequest $request Необходимые для отправки смс данные
+     *
+     * @return array
+     */
     public function sendSms(SmsRequest $request): array;
-    public function sendSmsMail(string $phones, string $message, int $translit, int $time, $id, int $format);
+
+    /**
+     * SMTP версия функции отправки SMS
+     *
+     * @param SmsRequest $request Необходимые для отправки смс данные
+     *
+     * @return bool
+     */
+    public function sendSmsMail(SmsRequest $request): bool;
 }
