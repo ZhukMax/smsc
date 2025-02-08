@@ -6,17 +6,18 @@ namespace Zhukmax\Smsc;
  * Class Api
  * @package Zhukmax\Smsc
  * @author Max Zhuk <mail@zhukmax.com>
+ * @license  https://github.com/ZhukMax/smsc/tree/master/LICENSE Apache-2.0
  */
 class Api extends AbstractApi
 {
     /**
-     * Функция отправки SMS.
-     * @throws \Exception
+     * Функция отправки SMS
+     * @throws Exception
      */
     public function sendSms(SmsRequest $request): array
     {
-        $params = $this->prepareParams($request);
-        $result = $this->sendCmd("send", $params, $request->files);
+        $request->setSender($this->sender)->setCost(3);
+        $result = $this->sendCmd('send', (array)$request, $request->files);
 
         if ($result[1] > 0) {
             $this->log->info(printf(
@@ -30,49 +31,10 @@ class Api extends AbstractApi
         return $result;
     }
 
-    protected function prepareParams(SmsRequest $request): array
-    {
-        $params = [
-            'cost' => 3,
-            'phones' => urlencode($request->phones),
-            'mes' => urlencode($request->message),
-            'translit' => $request->translit,
-            'id' => $request->id,
-        ];
-
-        $sender = $request->sender ?? $this->sender;
-
-        if (isset($sender)) {
-            $params['sender'] = urlencode($sender);
-        }
-
-        if ($request->format !== null) {
-            $params['format'] = self::format($request->format);
-        }
-
-        if ($request->time) {
-            $params['time'] = urlencode($request->time);
-        }
-
-        if ($request->query) {
-            $params = array_merge($params, $this->parseQuery($request->query));
-        }
-
-        return $params;
-    }
-
-    protected function parseQuery(string $query): array
-    {
-        $params = [];
-        parse_str($query, $params);
-
-        return $params;
-    }
-
     /**
      * SMTP версия функции отправки SMS.
      */
-    public function sendSmsMail(string $phones, string $message, int $translit = 0, int $time = 0, $id = 0, int $format = 0): bool
+    public function sendSmsMail(SmsRequest $request): bool
     {
         $to = "send@send.smsc.ru";
         $message = $this->login.":".$this->password.":$id:$time:$translit,$format,$this->sender:$phones:$message";
@@ -84,28 +46,11 @@ class Api extends AbstractApi
     }
 
     /**
-     * Функция получения стоимости SMS.
-     *
-     * @param array $phones
-     * @param string $message
-     * @param int $translit
-     * @param int|null $format
-     * @param string $sender
-     * @param string $query
-     * @return mixed
      * @throws Exception
      */
-    public function getSmsCost(array $phones, string $message, int $translit = 0, int $format = null, string $sender = '', string $query = "")
+    public function getSmsCost(SmsRequest $request): array
     {
-        $result = $this->sendCmd("send", [
-            "cost" => 1,
-            "phones" => $phones,
-            "mes" => urlencode($message),
-            "sender" => $sender,
-            "translit" => $translit,
-            self::format($format),
-            $query
-        ]);
+        $result = $this->sendCmd("send", (array)$request);
 
         if ($result[1] > 0) {
             $this->log->info("Стоимость рассылки: $result[0]. Всего SMS: $result[1]");
@@ -119,12 +64,7 @@ class Api extends AbstractApi
 
     /**
      * Функция проверки статуса отправленного SMS или HLR-запроса.
-     *
-     * @param array $id
-     * @param array $phones
-     * @param int $all
-     * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public function getStatus(array $id, array $phones, int $all = 0): array
     {
@@ -160,12 +100,6 @@ class Api extends AbstractApi
         }
     }
 
-    /**
-     * Функция получения баланса.
-     *
-     * @return string
-     * @throws \Exception
-     */
     public function getBalance(): string
     {
         $result = $this->sendCmd("balance");

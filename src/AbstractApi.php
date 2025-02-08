@@ -12,18 +12,14 @@ use Zhukmax\Smsc\Interfaces\InformationInterface;
  * Class AbstractApi
  * @package Zhukmax\Smsc
  * @author Max Zhuk <mail@zhukmax.com>
+ * @license  https://github.com/ZhukMax/smsc/tree/master/LICENSE Apache-2.0
  */
 abstract class AbstractApi implements BaseInterface, InformationInterface
 {
-    protected string $protocol;
-    protected string $charset;
-    protected string $from;
-    protected bool $httpPost;
-    protected ?string $sender;
-
+    private const string URL_FORMAT = '%s://smsc.ru/sys/%s.php?login=%s&psw=%s&fmt=1&charset=%s';
     protected string $url;
+    protected string $protocol;
     protected Client $client;
-
     protected Logger $log;
 
     private static array $formats = [
@@ -41,34 +37,30 @@ abstract class AbstractApi implements BaseInterface, InformationInterface
     ];
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    public function __construct(protected string $login, protected string $password, array $options = [])
-    {
+    public function __construct(
+        protected string $login,
+        protected string $password,
+        protected string $charset = 'UTF-8',
+        protected string $from = 'api@smsc.ru',
+        protected ?string $sender = null,
+        protected bool $isSecure = true,
+        protected bool $httpPost = false,
+        string $logFile = ''
+    ) {
         if (!$this->login || !$this->password) {
-            throw new Exception("Login and password is required");
+            throw new Exception('Login and password is required');
         }
 
-        $this->protocol = isset($options['https']) ? 'https': 'http';
-        $this->charset = $options['charset'] ?? 'utf-8';
-        $this->from = $options['from'] ?? 'api@smsc.ru';
-        $this->httpPost = isset($options['post']);
-        $this->sender = $options['sender'] ?? null;
-
-        // Initialize GuzzleHttp client
+        $this->protocol = $isSecure ? 'https': 'http';
         $this->client = new Client();
-
-        // Initialize logger
-        $this->log = new Logger($options['log'] ?? '');
-
-        $this->url = $this->protocol . "://smsc.ru/sys/%s.php?login=" .
-            urlencode($this->login) . "&psw=" . urlencode($this->password) .
-            "&fmt=1&charset=" . $this->charset;
+        $this->log = new Logger($logFile);
     }
 
     protected static function format(?int $id = null): string
     {
-        return $id ? "&".self::$formats[$id] : "";
+        return $id ? '&' . self::$formats[$id] : '';
     }
 
     public function setSender(?string $sender): AbstractApi
@@ -125,7 +117,15 @@ abstract class AbstractApi implements BaseInterface, InformationInterface
 
     private function buildUrl(string $cmd, array $props): string
     {
-        $url = str_replace('%s', $cmd, $this->url);
+        $url = sprintf(
+            self::URL_FORMAT,
+            $this->protocol,
+            $cmd,
+            urlencode($this->login),
+            urlencode($this->password),
+            $this->charset
+        );
+
         return $url . self::argString($props);
     }
 
@@ -136,7 +136,6 @@ abstract class AbstractApi implements BaseInterface, InformationInterface
 
     /**
      * Функция чтения URL
-     *
      * @throws Exception
      */
     protected function readUrl(string $url, array $files = [], int $timeout = 5): string

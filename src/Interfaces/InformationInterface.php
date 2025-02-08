@@ -3,6 +3,7 @@
 namespace Zhukmax\Smsc\Interfaces;
 
 use Exception;
+use Zhukmax\Smsc\SmsRequest;
 
 /**
  * Interface InfoInterface
@@ -16,32 +17,16 @@ use Exception;
 interface InformationInterface
 {
     /**
-     * Функция получения стоимости SMS.
+     * Функция получения стоимости SMS
      *
-     * @param array       $phones
-     * @param string      $message
-     * @param int         $translit - переводить или нет в
-     *                              транслит (1,2 или 0)
-     * @param int         $format
-     * @param string|null $sender   имя
-     *                              отправителя
-     *                              (Sender ID)
-     * @param string      $query    - строка
-     *                              дополнительных
-     *                              параметров,
-     *                              добавляемая
-     *                              в URL-запрос
-     *                              ("list=79999999999:Ваш
-     *                              пароль:
-     *                              123\n78888888888:Ваш
-     *                              пароль: 456")
+     * @param SmsRequest $request Данные, необходимые для получения стоимости
      *
-     * @return mixed
+     * @return array
      */
-    public function getSmsCost(array $phones, string $message, int $translit, int $format, string $sender, string $query);
+    public function getSmsCost(SmsRequest $request): array;
 
     /**
-     * Функция проверки статуса отправленного SMS или HLR-запроса.
+     * Функция проверки статуса отправленного SMS или HLR-запроса
      *
      * @param array $id     Массив ID сообщений
      * @param array $phones Массив номеров телефона
@@ -53,7 +38,7 @@ interface InformationInterface
     public function getStatus(array $id, array $phones, int $all): array;
 
     /**
-     * Функция получения баланса.
+     * Функция получения баланса
      *
      * @return string
      * @throws Exception
